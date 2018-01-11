@@ -1,0 +1,10 @@
+To compile:
+
+$> cd p3
+$> make
+
+You can test your implementation by using the runtest.sh script in the bin directory. 
+
+An example 10-second simulation run from from the directory raft/src/edu/duke/raft using tests/sampletest.txt:
+
+bin/runtest.sh 10 tests/sampletest.txt 2> /dev/null
