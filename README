@@ -1,1 +1,7 @@
-First repo file.
+Code for Duke University CS310 Operating Systems. This repo contains:
+
+Heap: 		    Heap simulation algorithm (C)
+Sandwich:       Multi-threaded producer-consumer program (C++)
+ThreadLibrary:  Thread library (C++)
+BufferOverflow: Buffer overflow attack (x86 assembly)
+Raft:  			Raft Consensus Protocol implementation (Java)
